@@ -1,0 +1,22 @@
+---
+## Ansible Playbook to perform patching on RHEL x86/Z Servers
+- hosts: whatever
+  become: true
+  serial: 6
+  gather_facts: false
+  ignore_unreachable: yes
+  tasks:
+   - name: Filter facts
+     setup: gather_subset=!facter,!network,!hardware
+
+# This Task is to upgrade all packages including Kernel and OS Release
+   - name: YUM update all packages
+     shell: yum -y update  > /var/tmp/patch-update.out
+     async: 7200
+     poll: 30
+     register: yum_update
+     ignore_errors: yes
+# Debug if Yum update is failed 
+   - debug:
+       msg: "Status:{{ inventory_hostname }}:YUM Update Failed"
+     when : yum_update.rc == 1
